@@ -1,51 +1,61 @@
-if __name__ == '__main__':
-    import datetime
-    import sqlite3
-    from xml.dom.minidom import parse
-    from glob import glob
+import sqlite3
+from xml.dom.minidom import parse
+from glob import glob
 
+from db import Db
+
+if __name__ == '__main__':
     con = sqlite3.Connection('db.db')
     cur = con.cursor()
+    bomdia = Db()
 
-    # cur.execute('drop table if exists prod')
-    # cur.execute(
-    #     '''create table if not exists prod(
-    #     name text,
-    #     price text,
-    #     date text,
-    #     pred text)''')
+    bomdia.recreate_db(con, cur)
 
-    cur.execute('drop table if exists estoque')
-    cur.execute('create table')
+    xmls_entrada = [i for i in glob('./entrada/*.xml')]
 
-    xmls = [i for i in glob('./xmls/*.xml')]
+    for i in xmls_entrada:
+        with open(i) as f:
+            domtree = parse(f)
 
-    for file in xmls:
+        name = domtree.getElementsByTagName('nNF')[0].firstChild.data
+        item = domtree.getElementsByTagName('cProd')[0].firstChild.data
+        vProd = domtree.getElementsByTagName('vProd')[0].firstChild.data
+        indTot = domtree.getElementsByTagName('indTot')[0].firstChild.data
+
+        cur.execute('''
+            insert into estoque(
+            id,
+            price,
+            date,
+            qnt,
+            entrada)
+            values(?,?,datetime(),?,?)
+        ''', (name, vProd, int(indTot), 1)
+        )
+
+    xml_saida = [i for i in glob('./saida/*.xml')]
+
+    for file in xml_saida:
         with open(file) as f:
             domtree = parse(f)
 
         name = domtree.getElementsByTagName('nNF')[0].firstChild.data
-        # print(name[0].firstChild.data)
-
         item = domtree.getElementsByTagName('cProd')[0].firstChild.data
-        # print(item[0].firstChild.data)
-
         vProd = domtree.getElementsByTagName('vProd')[0].firstChild.data
         indTot = domtree.getElementsByTagName('indTot')[0].firstChild.data
-        date = datetime.datetime.today()
-        print(name)
-        print(vProd)
-        print(date)
 
+        # saida
         cur.execute('''
-            insert into prod(
-            name,
+            insert into estoque(
+            id,
             price,
-            date)
-            values(?,?,?)
-        ''', (name, vProd, str(date))
+            date,
+            qnt,
+            entrada)
+            values(?,?,datetime(),?,?)
+        ''', (name, vProd, int(indTot), 0)
         )
 
-        cur.close()
-        con.commit()
-        con.close()
+    cur.close()
+    con.commit()
+    con.close()
