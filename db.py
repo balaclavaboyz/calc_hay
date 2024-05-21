@@ -7,7 +7,7 @@ class Db:
     def recreate_db(self, con: sqlite3.Connection, cur: sqlite3.Cursor):
         cur.execute('drop table if exists estoque')
         cur.execute(
-            'create table estoque(id text, price text, date text, qnt int, entrada int)')
+            'create table estoque(id text, price text, date timestamp, qnt int, entrada int)')
 
         cur.execute('drop table if exists pred')
         cur.execute('create table if not exists pred(name text, pred text)')
