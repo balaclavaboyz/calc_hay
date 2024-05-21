@@ -1,4 +1,6 @@
 from pprint import pp
+import datetime
+import numpy
 import sqlite3
 from xml.dom.minidom import parse
 from glob import glob
@@ -21,7 +23,7 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
             for i in all_prods:
                 id = domtree.getElementsByTagName('cEAN')[0].firstChild.data
-                item = i.getElementsByTagName('cProd')[0].firstChild.data
+                # item = i.getElementsByTagName('cProd')[0].firstChild.data
                 vProd = i.getElementsByTagName(
                     'vProd')[0].firstChild.data
                 indTot = i.getElementsByTagName(
@@ -60,7 +62,7 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
             for i in all_prods:
                 id = domtree.getElementsByTagName('cEAN')[0].firstChild.data
-                item = i.getElementsByTagName('cProd')[0].firstChild.data
+                # item = i.getElementsByTagName('cProd')[0].firstChild.data
                 vProd = i.getElementsByTagName(
                     'vProd')[0].firstChild.data
                 indTot = i.getElementsByTagName(
@@ -75,23 +77,66 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     qnt,
                     entrada)
                     values(?,?,?,?,?)
-                ''', (id, vProd, data_hora_emissao, int(indTot), 0)
+                ''', (id, vProd, datetime.datetime.strptime(data_hora_emissao[:-6], '%Y-%m-%dT%H:%M:%S'), int(indTot), 0)
                 )
 
 
 def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
-    cur.execute('select * from estoque group by id')
+    cur.execute('select distinct id from estoque')
     unique_id = cur.fetchall()
-    pp(unique_id)
+    cur.execute('select * from estoque where entrada = 0 order by id')
+
+    uniq = []
+    for ff in unique_id:
+        uniq.append(ff[0])
+
+    temp = {}
+
+    for x in cur.fetchall():
+        if x[0] not in temp.keys():
+            temp[x[0]] = [x[2]]
+        else:
+            old: list = temp.get(x[0])
+            old.append(x[2])
+            temp[x[0]] = old
+
+    for k, v in temp.items():
+        new_values = [v[i]-v[i-1]
+                      for i in range(1, len(v))]
+
+        avg_values = sum(new_values, datetime.timedelta(0))/len(new_values)
+
+        pred_per_day = avg_values.total_seconds()/30/3600
+
+        cur.execute('''
+            update pred
+            set pred = ?
+            where name = ?
+        ''', (pred_per_day, k))
+        # TODO no db nao existe o row com o nome para k
+
+        # for index in range(len(v)):
+        #     date1 = v[index]
+        #     date2 = v[index - 1]
+        #     pp(date1.timestamp())
+        #     pp(date2.timestamp())
+        #     diff = date2.timestamp() - date1.timestamp()
+        #     delta_time += diff
+        #     pp(delta_time)
+        # pp('===')
+        # fazendo diff entre os els da list de datetime e dps fazer mean a lista resultante e dps usaro res na func abaixo
+        # pp(delta_time/len(v))
+    # pp(temp['7898446731243'])
 
 
 if __name__ == '__main__':
-    con = sqlite3.Connection('db.db')
+    con = sqlite3.connect(
+        'db.db', detect_types=sqlite3.PARSE_COLNAMES | sqlite3.PARSE_DECLTYPES)
     cur = con.cursor()
     bomdia = Db()
 
-    # bomdia.recreate_db(con, cur)
-    # xml_process(con, cur)
+    bomdia.recreate_db(con, cur)
+    xml_process(con, cur)
     pred(con, cur)
 
     cur.close()
