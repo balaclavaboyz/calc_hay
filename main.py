@@ -88,13 +88,7 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
 
 def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
-    cur.execute('select distinct id from estoque')
-    unique_id = cur.fetchall()
     cur.execute('select * from estoque where entrada = 0 order by id')
-
-    uniq = []
-    for ff in unique_id:
-        uniq.append(ff[0])
 
     temp = {}
 
