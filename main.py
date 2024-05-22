@@ -94,11 +94,15 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
     for x in cur.fetchall():
         if x[0] not in temp.keys():
-            temp[x[0]] = [x[2]]
+            item_date = x[3]
+            item_id = x[0]
+            temp[item_id] = [item_date]
         else:
-            old: list = temp.get(x[0])
-            old.append(x[2])
-            temp[x[0]] = old
+            item_date = x[3]
+            item_id = x[0]
+            old = temp.get(item_id)
+            old.append(item_date)
+            temp[item_id] = old
 
     for k, v in temp.items():
         new_values = [v[i]-v[i-1]
@@ -132,6 +136,7 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
         # fazendo diff entre os els da list de datetime e dps fazer mean a lista resultante e dps usaro res na func abaixo
         # pp(delta_time/len(v))
     # pp(temp['7898446731243'])
+        ''', (round(pred_per_day, 2), k))
 
 
 if __name__ == '__main__':
