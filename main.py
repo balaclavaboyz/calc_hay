@@ -121,21 +121,6 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
             update pred
             set pred = ?
             where id = ?
-        ''', (pred_per_day, k))
-        # TODO no db nao existe o row com o nome para k
-
-        # for index in range(len(v)):
-        #     date1 = v[index]
-        #     date2 = v[index - 1]
-        #     pp(date1.timestamp())
-        #     pp(date2.timestamp())
-        #     diff = date2.timestamp() - date1.timestamp()
-        #     delta_time += diff
-        #     pp(delta_time)
-        # pp('===')
-        # fazendo diff entre os els da list de datetime e dps fazer mean a lista resultante e dps usaro res na func abaixo
-        # pp(delta_time/len(v))
-    # pp(temp['7898446731243'])
         ''', (round(pred_per_day, 2), k))
 
 
