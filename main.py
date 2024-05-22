@@ -111,7 +111,7 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
         cur.execute('''
             update pred
             set pred = ?
-            where name = ?
+            where id = ?
         ''', (pred_per_day, k))
         # TODO no db nao existe o row com o nome para k
 
