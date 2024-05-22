@@ -108,6 +108,11 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
         pred_per_day = avg_values.total_seconds()/30/3600
 
+        cur.execute('select * from pred where id = ?', (k,))
+        res = cur.fetchone()
+        if not res:
+            cur.execute('insert into pred(id)values(?)', (k,))
+
         cur.execute('''
             update pred
             set pred = ?
