@@ -28,6 +28,8 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     'vProd')[0].firstChild.data
                 indTot = i.getElementsByTagName(
                     'indTot')[0].firstChild.data
+                name = i.getElementsByTagName(
+                    'xProd')[0].firstChild.data
 
                 # saida
                 cur.execute('''
@@ -36,9 +38,10 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     price,
                     date,
                     qnt,
-                    entrada)
-                    values(?,?,?,?,?)
-                ''', (id, vProd, data_hora_emissao, int(indTot), 1)
+                    entrada,
+                    name)
+                    values(?,?,?,?,?,?)
+                ''', (id, vProd, data_hora_emissao, int(indTot), 1, name)
                 )
 
     # ===
@@ -67,6 +70,8 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     'vProd')[0].firstChild.data
                 indTot = i.getElementsByTagName(
                     'indTot')[0].firstChild.data
+                name = i.getElementsByTagName(
+                    'xProd')[0].firstChild.data
 
                 # saida
                 cur.execute('''
@@ -75,9 +80,10 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     price,
                     date,
                     qnt,
-                    entrada)
-                    values(?,?,?,?,?)
-                ''', (id, vProd, datetime.datetime.strptime(data_hora_emissao[:-6], '%Y-%m-%dT%H:%M:%S'), int(indTot), 0)
+                    entrada,
+                    name)
+                    values(?,?,?,?,?,?)
+                ''', (id, vProd, datetime.datetime.strptime(data_hora_emissao[:-6], '%Y-%m-%dT%H:%M:%S'), int(indTot), 0, name)
                 )
 
 
