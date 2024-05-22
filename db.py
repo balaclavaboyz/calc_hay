@@ -10,7 +10,7 @@ class Db:
             'create table estoque(id text, price text, date timestamp, qnt int, entrada int)')
 
         cur.execute('drop table if exists pred')
-        cur.execute('create table if not exists pred(name text, pred text)')
+        cur.execute('create table if not exists pred(id text, pred text)')
 
         con.commit()
 
