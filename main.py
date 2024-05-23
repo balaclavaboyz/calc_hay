@@ -21,6 +21,12 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
             all_prods = domtree.getElementsByTagName('det')
 
+            nfe = domtree.getElementsByTagName(
+                'infNFe')[0].getAttribute('Id')
+
+            # insert new nfe id
+            cur.execute('insert into nfe(nfe)values(?)', (nfe,))
+
             for i in all_prods:
                 id = domtree.getElementsByTagName('cEAN')[0].firstChild.data
                 # item = i.getElementsByTagName('cProd')[0].firstChild.data
@@ -31,7 +37,7 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                 name = i.getElementsByTagName(
                     'xProd')[0].firstChild.data
 
-                # saida
+                # entrada
                 cur.execute('''
                     insert into estoque(
                     id,
@@ -39,9 +45,10 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     date,
                     qnt,
                     entrada,
-                    name)
-                    values(?,?,?,?,?,?)
-                ''', (id, vProd, data_hora_emissao, int(indTot), 1, name)
+                    name,
+                    nfe)
+                    values(?,?,datetime(?) ,?,?,?,?)
+                ''', (id, vProd, data_hora_emissao, int(indTot), 1, name, nfe)
                 )
 
     # ===
@@ -62,6 +69,11 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                 0].firstChild.data
 
             all_prods = domtree.getElementsByTagName('det')
+            nfe = domtree.getElementsByTagName(
+                'infNFe')[0].getAttribute('Id')
+
+            # insert new nfe id
+            cur.execute('insert into nfe(nfe)values(?)', (nfe,))
 
             for i in all_prods:
                 id = domtree.getElementsByTagName('cEAN')[0].firstChild.data
@@ -81,9 +93,10 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     date,
                     qnt,
                     entrada,
-                    name)
-                    values(?,?,?,?,?,?)
-                ''', (id, vProd, datetime.datetime.strptime(data_hora_emissao[:-6], '%Y-%m-%dT%H:%M:%S'), int(indTot), 0, name)
+                    name,
+                    nfe)
+                    values(?,?,datetime(?) ,?,?,?,?)
+                ''', (id, vProd, data_hora_emissao, int(indTot), 0, name, nfe)
                 )
 
 
@@ -94,11 +107,11 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
     for x in cur.fetchall():
         if x[0] not in temp.keys():
-            item_date = x[3]
+            item_date = datetime.datetime.strptime(x[3], '%Y-%m-%d %H:%M:%S')
             item_id = x[0]
             temp[item_id] = [item_date]
         else:
-            item_date = x[3]
+            item_date = datetime.datetime.strptime(x[3], '%Y-%m-%d %H:%M:%S')
             item_id = x[0]
             old = temp.get(item_id)
             old.append(item_date)
@@ -110,7 +123,8 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
         avg_values = sum(new_values, datetime.timedelta(0))/len(new_values)
 
-        pred_per_day = avg_values.total_seconds()/30/3600
+        # 3600 minuto e hora e 24 horas
+        pred_per_day = avg_values.total_seconds()/3600/24
 
         cur.execute('select * from pred where id = ?', (k,))
         res = cur.fetchone()
@@ -125,12 +139,11 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
 
 if __name__ == '__main__':
-    con = sqlite3.connect(
-        'db.db', detect_types=sqlite3.PARSE_COLNAMES | sqlite3.PARSE_DECLTYPES)
+    con = sqlite3.connect('db.db')
     cur = con.cursor()
     bomdia = Db()
 
-    bomdia.recreate_db(con, cur)
+    bomdia.init(con, cur)
     xml_process(con, cur)
     pred(con, cur)
 
