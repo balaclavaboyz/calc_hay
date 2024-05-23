@@ -12,6 +12,10 @@ class Db:
         cur.execute('drop table if exists pred')
         cur.execute('create table if not exists pred(id text, pred text)')
 
+        # ID NFES
+        cur.execute('drop table if exists nfe')
+        cur.execute('create table if not exists nfe(nfe text primary key)')
+
         con.commit()
 
     def estoque_check(self, con: sqlite3.Connection, cur: sqlite3.Cursor, name: str, qnt: int):
