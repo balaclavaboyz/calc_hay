@@ -23,6 +23,7 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
             nfe = domtree.getElementsByTagName(
                 'infNFe')[0].getAttribute('Id')
+            natOp = domtree.getElementsByTagName('natOp')[0].firstChild.data
 
             # insert new nfe id
             cur.execute('insert into nfe(nfe)values(?)', (nfe,))
@@ -46,9 +47,10 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     qnt,
                     entrada,
                     name,
-                    nfe)
-                    values(?,?,datetime(?) ,?,?,?,?)
-                ''', (id, vProd, data_hora_emissao, int(indTot), 1, name, nfe)
+                    nfe,
+                    natOp)
+                    values(?,?,datetime(?) ,?,?,?,?,?)
+                ''', (id, vProd, data_hora_emissao, int(indTot), 1, name, nfe, natOp)
                 )
 
     # ===
@@ -71,6 +73,7 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
             all_prods = domtree.getElementsByTagName('det')
             nfe = domtree.getElementsByTagName(
                 'infNFe')[0].getAttribute('Id')
+            natOp = domtree.getElementsByTagName('natOp')[0].firstChild.data
 
             # insert new nfe id
             cur.execute('insert into nfe(nfe)values(?)', (nfe,))
@@ -94,9 +97,10 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
                     qnt,
                     entrada,
                     name,
-                    nfe)
-                    values(?,?,datetime(?) ,?,?,?,?)
-                ''', (id, vProd, data_hora_emissao, int(indTot), 0, name, nfe)
+                    nfe,
+                    natOp)
+                    values(?,?,datetime(?) ,?,?,?,?,?)
+                ''', (id, vProd, data_hora_emissao, int(indTot), 0, name, nfe, natOp)
                 )
 
 
@@ -107,11 +111,11 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
     for x in cur.fetchall():
         if x[0] not in temp.keys():
-            item_date = datetime.datetime.strptime(x[3], '%Y-%m-%d %H:%M:%S')
+            item_date = datetime.datetime.strptime(x[4], '%Y-%m-%d %H:%M:%S')
             item_id = x[0]
             temp[item_id] = [item_date]
         else:
-            item_date = datetime.datetime.strptime(x[3], '%Y-%m-%d %H:%M:%S')
+            item_date = datetime.datetime.strptime(x[4], '%Y-%m-%d %H:%M:%S')
             item_id = x[0]
             old = temp.get(item_id)
             old.append(item_date)
@@ -143,9 +147,10 @@ if __name__ == '__main__':
     cur = con.cursor()
     bomdia = Db()
 
-    bomdia.init(con, cur)
-    xml_process(con, cur)
-    pred(con, cur)
+    # bomdia.init(con, cur)
+    # xml_process(con, cur)
+    # pred(con, cur)
+    bomdia.view_imposto(con, cur)
 
     cur.close()
     con.commit()
