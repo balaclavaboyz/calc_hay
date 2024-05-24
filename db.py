@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import sqlite3
+from pprint import pp
 
 
 @dataclass
@@ -7,7 +8,7 @@ class Db:
     def init(self, con: sqlite3.Connection, cur: sqlite3.Cursor):
         cur.execute('drop table if exists estoque')
         cur.execute(
-            'create table estoque(id text, price text, name text, date timestamp, qnt int, entrada int, nfe text, foreign key (nfe) references nfe (nfe))')
+            'create table estoque(id text, natop text, price real, name text, date timestamp, qnt int, entrada int, nfe text, foreign key (nfe) references nfe (nfe))')
 
         cur.execute('drop table if exists pred')
         cur.execute('create table if not exists pred(id text, pred text)')
@@ -35,10 +36,16 @@ class Db:
                     ''', (int(qnt)*-1, name))
         return
 
-    def view_total(self, con: sqlite3.Connection, cur: sqlite3.Cursor):
-        cur.execute('drop view temp')
-        cur.execute('''
-            create view temp
-        ''')
-        cur.execute('select * from temp')
-        return cur.fetchall()
+    def view_imposto(self, con: sqlite3.Connection, cur: sqlite3.Cursor):
+        cur.execute('''select sum(price)
+        from estoque
+        where entrada = 0 and natop = 'Venda de mercadorias' ''')
+        res = cur.fetchall()
+
+        total = res[0][0]
+        simples = total * 0.04
+        ml_tax = total * .25
+
+        pp(total)
+        pp(simples)
+        pp(ml_tax)
