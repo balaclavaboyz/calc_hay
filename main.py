@@ -105,7 +105,8 @@ def xml_process(con: sqlite3.Connection, cur: sqlite3.Cursor):
 
 
 def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
-    cur.execute('select * from estoque where entrada = 0 order by id')
+    cur.execute(
+        'select * from estoque where entrada = 0 and natOp = \'Venda de mercadorias\' order by date ')
 
     temp = {}
 
@@ -122,9 +123,11 @@ def pred(con: sqlite3.Connection, cur: sqlite3.Cursor):
             temp[item_id] = old
 
     for k, v in temp.items():
-        new_values = [v[i]-v[i-1]
-                      for i in range(1, len(v))]
-
+        if len(v) == 1:
+            continue
+        else:
+            new_values = [v[i]-v[i-1]
+                          for i in range(1, len(v))]
         avg_values = sum(new_values, datetime.timedelta(0))/len(new_values)
 
         # 3600 minuto e hora e 24 horas
@@ -147,10 +150,11 @@ if __name__ == '__main__':
     cur = con.cursor()
     bomdia = Db()
 
-    # bomdia.init(con, cur)
-    # xml_process(con, cur)
-    # pred(con, cur)
-    bomdia.view_imposto(con, cur)
+    bomdia.init(con, cur)
+    xml_process(con, cur)
+    pred(con, cur)
+    # bomdia.view_imposto(con, cur)
+    # bomdia.view_count_prod(con, cur)
 
     cur.close()
     con.commit()
